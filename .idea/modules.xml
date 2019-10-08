@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JdkDemo.iml" filepath="$PROJECT_DIR$/.idea/modules/JdkDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JdkDemo.main.iml" filepath="$PROJECT_DIR$/.idea/modules/JdkDemo.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JdkDemo.test.iml" filepath="$PROJECT_DIR$/.idea/modules/JdkDemo.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/jdk8u.iml" filepath="$PROJECT_DIR$/.idea/jdk8u.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.jlfang.JdkDemo.main.iml" filepath="$PROJECT_DIR$/.idea/modules/org.jlfang.JdkDemo.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.jlfang.JdkDemo.test.iml" filepath="$PROJECT_DIR$/.idea/modules/org.jlfang.JdkDemo.test.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="JdkDemo.main" target="1.8" />
+      <module name="JdkDemo.test" target="1.8" />
+      <module name="org.jlfang.JdkDemo.main" target="1.8" />
+      <module name="org.jlfang.JdkDemo.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
