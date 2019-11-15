@@ -389,6 +389,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
+     * 显示threshold的大小应该为2的n次幂
      * Returns a power of two size for the given target capacity.
      */
     static final int tableSizeFor(int cap) {
@@ -646,33 +647,45 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         Node<K, V>[] tab;
         Node<K, V> p;
         int n, i;
+        // tab为空 通过resize()创建，插入第一个值的时候发生
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
+        // 计算散列index，没有冲突直接插入
         if ((p = tab[i = (n - 1) & hash]) == null)
             tab[i] = newNode(hash, key, value, null);
+            // 有冲突
         else {
             Node<K, V> e;
             K k;
+            // 存在hash值相同且key相等的，先记录下来，后面的插入步骤会使用新值将旧值替换掉
             if (p.hash == hash &&
                     ((k = p.key) == key || (key != null && key.equals(k))))
                 e = p;
+                // 该节点为树，散列冲突过长，大于TREEIFY_THRESHOLD = 8 时会转换为树
             else if (p instanceof TreeNode)
                 e = ((TreeNode<K, V>) p).putTreeVal(this, tab, hash, key, value);
+                // 该节点为链表
             else {
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
+                        //插入到链尾
                         p.next = newNode(hash, key, value, null);
+                        // 链表的长度超过TREEIFY_THRESHOLD -1 则转换为树
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
                     }
+                    //对链表中的相同hash值且key相同的进一步做检查
                     if (e.hash == hash &&
                             ((k = e.key) == key || (key != null && key.equals(k))))
                         break;
                     p = e;
                 }
             }
+            // 插入
             if (e != null) { // existing mapping for key
+                //取出旧值，onlyIfAbsent此时为false，
+                // 所以不管oldValue有与否，都拿新值来替换
                 V oldValue = e.value;
                 if (!onlyIfAbsent || oldValue == null)
                     e.value = value;
@@ -681,6 +694,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
             }
         }
         ++modCount;
+        //超过阈值 threshold = capacity * factor， 调用resize()进行扩容
         if (++size > threshold)
             resize();
         afterNodeInsertion(evict);
@@ -702,18 +716,29 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         int oldThr = threshold;
         int newCap, newThr = 0;
         if (oldCap > 0) {
+            // 超过最大值就不再扩充talbe，
+            // 但并不表示不能插入了，
+            // 只是后面的只能碰撞冲突了
             if (oldCap >= MAXIMUM_CAPACITY) {
                 threshold = Integer.MAX_VALUE;
                 return oldTab;
-            } else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+            }
+            // 没超过最大值，就扩充为原来的 2 倍。
+            // 主要是容量以及阈值都为原来的 2倍。
+            // 容量和阈值本身就都必须是 2 的幂，
+            // 所以扩容的倍数必须是2的倍数，那么扩2倍就非常合理了。
+            else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
                     oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
-        } else if (oldThr > 0) // initial capacity was placed in threshold
+        } else if (oldThr > 0)
+            // initial capacity was placed in threshold
             newCap = oldThr;
-        else {               // zero initial threshold signifies using defaults
+        else {
+            // zero initial threshold signifies using defaults
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int) (DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
+        // 计算新的resize阈值
         if (newThr == 0) {
             float ft = (float) newCap * loadFactor;
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float) MAXIMUM_CAPACITY ?
@@ -721,41 +746,54 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         }
         threshold = newThr;
         @SuppressWarnings({"rawtypes", "unchecked"})
-        Node<K, V>[] newTab = (Node<K, V>[]) new Node[newCap];
+        //重新分配内存
+                Node<K, V>[] newTab = (Node<K, V>[]) new Node[newCap];
         table = newTab;
         if (oldTab != null) {
+            // 把原来 tables中的每个节点都移动到新的tables中
             for (int j = 0; j < oldCap; ++j) {
                 Node<K, V> e;
                 if ((e = oldTab[j]) != null) {
                     oldTab[j] = null;
+                    // 没有冲突，重新计算下位置
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
+                        //有冲突，且冲突节点为树节点
+                        // 如果树很大：分裂成2棵树
+                        // 如果树很小，转成链表
                     else if (e instanceof TreeNode)
                         ((TreeNode<K, V>) e).split(this, newTab, j, oldCap);
+                        // 如果冲突节点为链表，保存顺序
                     else { // preserve order
                         Node<K, V> loHead = null, loTail = null;
                         Node<K, V> hiHead = null, hiTail = null;
                         Node<K, V> next;
                         do {
                             next = e.next;
+                            //索引不变
                             if ((e.hash & oldCap) == 0) {
                                 if (loTail == null)
                                     loHead = e;
                                 else
                                     loTail.next = e;
                                 loTail = e;
-                            } else {
+                            }
+                            // 原索引+oldCap
+                            else {
                                 if (hiTail == null)
                                     hiHead = e;
                                 else
                                     hiTail.next = e;
                                 hiTail = e;
                             }
-                        } while ((e = next) != null);
+                        }
+                        // 原索引放到tables里
+                        while ((e = next) != null);
                         if (loTail != null) {
                             loTail.next = null;
                             newTab[j] = loHead;
                         }
+                        // 原索引+oldCap放到tables里
                         if (hiTail != null) {
                             hiTail.next = null;
                             newTab[j + oldCap] = hiHead;
@@ -822,6 +860,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Implements Map.remove and related methods
+     * *
      *
      * @param hash       hash for key
      * @param key        the key
